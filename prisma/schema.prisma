@@ -1,0 +1,126 @@
+datasource db {
+  provider = "postgresql"
+  url= env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Enum for school levels
+enum SchoolLevel {
+    ELEMENTARY
+    MIDDLE
+    HIGH
+}
+
+// Enum for distribution status
+enum DistributionStatus {
+    PENDING
+    RECEIVED
+    NOT_RECEIVED
+}
+
+// Year/Grade model (e.g., Grade 1, first, Year 7, etc.)
+model Year {
+    id          String   @id @default(cuid())
+    yearNumber  Int // 1, 2, 3, etc.
+    name        String 
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    level   SchoolLevel @default(ELEMENTARY)
+    classes Class[]
+
+    @@unique([level, yearNumber])
+    @@map("years")
+}
+
+// Class/Section model (e.g., Grade 1-A, Grade 1-B)
+model Class {
+    id          String   @id @default(cuid())
+    yearId      String
+    section     String // A, B, C, etc.
+    name        String // e.g., "Grade 1-A"
+    capacity    Int // Maximum number of students
+    roomNumber  String?
+    teacherName String?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    year     Year      @relation(fields: [yearId], references: [id], onDelete: Cascade)
+    students Student[]
+
+    @@unique([yearId, section])
+    @@map("classes")
+}
+
+// Student model
+model Student {
+    id            String   @id @default(cuid())
+    classId       String
+    firstName     String
+    lastName      String
+    dateOfBirth   DateTime
+    gender        String?
+    enrollmentNo  String   @unique
+    email         String?
+    phone         String?
+    guardianName  String
+    guardianPhone String
+    address       String
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    class             Class?              @relation(fields: [classId], references: [id])
+    bookDistributions BookDistribution[]
+
+    @@index([classId])
+    @@map("students")
+}
+
+// Book model (inventory)
+model Book {
+    id            String   @id @default(cuid())
+    title         String
+    author        String?
+    isbn          String?  @unique
+    subject       String?
+    publisher     String?
+    publishedYear Int?
+    edition       String?
+    totalQuantity Int      @default(0) // Total books in inventory
+    availableQty  Int      @default(0) // Available for distribution
+    issuedQty     Int      @default(0) // Currently issued
+    description   String?
+    coverImage    String?
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    level             SchoolLevel?
+    bookDistributions BookDistribution[]
+
+    @@index([level])
+    @@index([isbn])
+    @@map("books")
+}
+
+// Book Distribution model (tracks which student received which book)
+model BookDistribution {
+    id               String             @id @default(cuid())
+    studentId        String
+    bookId           String
+    distributionDate DateTime           @default(now())
+    status           DistributionStatus @default(PENDING)
+    notes            String?
+    createdAt        DateTime           @default(now())
+    updatedAt        DateTime           @updatedAt
+
+    student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    book    Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+    @@index([studentId])
+    @@index([bookId])
+    @@index([status])
+    @@map("book_distributions")
+}
