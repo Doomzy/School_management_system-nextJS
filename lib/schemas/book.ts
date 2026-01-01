@@ -16,6 +16,7 @@ export const createBookSchema = z.object({
   issuedQty: z.number().int().min(0, "Issued quantity must be at least 0"),
   description: z.string().optional().nullable(),
   coverImage: z.string().optional().nullable(),
+  coverImagePublicId: z.string().optional().nullable(),
   level: z.enum(["ELEMENTARY", "MIDDLE", "HIGH"]).optional().nullable(),
 });
 

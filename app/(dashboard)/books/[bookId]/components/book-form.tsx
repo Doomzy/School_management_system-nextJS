@@ -26,6 +26,12 @@ import { useRouter } from "next/navigation";
 import { createBookSchema } from "@/lib/schemas/book";
 import type { Book } from "@prisma/client";
 import { schoolLevelsArray } from "@/lib/constants";
+import {
+  handleDeleteImage,
+  handleImageUpload,
+  UploadedImage,
+} from "@/lib/image-cloud/image-upload";
+import Image from "next/image";
 
 type BookFormData = z.infer<typeof createBookSchema>;
 
@@ -34,6 +40,15 @@ interface BookFormProps {
 }
 
 export function BookForm({ initialData }: BookFormProps) {
+  const [uploading, setUploading] = useState(false);
+  const [currentImage, setCurrentImage] = useState<UploadedImage | null>(
+    initialData && initialData.coverImage && initialData.coverImagePublicId
+      ? {
+          url: initialData.coverImage,
+          publicId: initialData.coverImagePublicId,
+        }
+      : null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -57,7 +72,6 @@ export function BookForm({ initialData }: BookFormProps) {
       availableQty: initialData?.availableQty || 0,
       issuedQty: initialData?.issuedQty || 0,
       description: initialData?.description || "",
-      coverImage: initialData?.coverImage || "",
       level: initialData?.level || undefined,
     },
   });
@@ -72,7 +86,11 @@ export function BookForm({ initialData }: BookFormProps) {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          coverImage: currentImage?.url,
+          coverImagePublicId: currentImage?.publicId,
+        }),
       });
 
       if (!response.ok) {
@@ -85,6 +103,7 @@ export function BookForm({ initialData }: BookFormProps) {
     } catch (error) {
       console.error(error);
       toast.error("An unexpected error occurred");
+      setCurrentImage(null);
     } finally {
       setIsLoading(false);
     }
@@ -370,24 +389,59 @@ export function BookForm({ initialData }: BookFormProps) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="coverImage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cover Image URL</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://example.com/cover.jpg"
-                        disabled={isLoading}
-                        {...field}
-                        value={field.value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="coverImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Cover Image (JPG, JPEG, PNG - Max 4MB)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="file"
+                          accept=".jpg,.jpeg,.png"
+                          disabled={isLoading || uploading}
+                          {...field}
+                          onChange={(e) =>
+                            handleImageUpload(
+                              e,
+                              currentImage,
+                              setCurrentImage,
+                              setUploading,
+                              initialData?.id
+                            )
+                          }
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {currentImage && (
+                  <div className="mt-2 relative">
+                    <Image
+                      src={currentImage.url}
+                      width={200}
+                      height={200}
+                      alt="Preview"
+                      className="w-fit h-48 object-contain rounded"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() =>
+                        handleDeleteImage(currentImage, setCurrentImage)
+                      }
+                      className="absolute top-2 right-2 "
+                    >
+                      Delete Image
+                    </Button>
+                  </div>
                 )}
-              />
+              </div>
             </div>
 
             <div className="flex gap-3 pt-4">
