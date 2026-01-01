@@ -29,7 +29,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onDelete = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/classes/${data.id}`, {
+      const response = await fetch(`/api/books/${data.id}`, {
         method: "DELETE",
       });
 
@@ -37,16 +37,16 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
         const errorData = await response.json();
         throw new Error(
           errorData.error ||
-            `Failed to delete class (Status: ${response.status})`
+            `Failed to delete book (Status: ${response.status})`
         );
       }
 
       router.refresh();
-      toast.success("Class deleted successfully");
+      toast.success("Book deleted successfully");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unexpected error occurred";
-      console.error("Error deleting class:", error);
+      console.error("Error deleting book:", error);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
