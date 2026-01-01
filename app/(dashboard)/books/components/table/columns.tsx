@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
+import Image from "next/image";
 
 export type Book = {
   id: string;
@@ -15,9 +16,24 @@ export type Book = {
   availableQty: number;
   issuedQty: number;
   level: string;
+  coverImage: string | null;
 };
 
 export const booksColumns: ColumnDef<Book>[] = [
+  {
+    header: "Cover",
+    cell: ({ row }) => (
+      <div>
+        <Image
+          src={row.original.coverImage || "/placeholder-book.png"}
+          width={200}
+          height={200}
+          alt="Preview"
+          className="w-24 h-24 object-contain rounded"
+        />
+      </div>
+    ),
+  },
   {
     header: "Book Details",
     cell: ({ row }) => (
