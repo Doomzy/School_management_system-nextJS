@@ -17,7 +17,7 @@ export const createBookSchema = z.object({
   description: z.string().optional().nullable(),
   coverImage: z.string().optional().nullable(),
   coverImagePublicId: z.string().optional().nullable(),
-  level: z.enum(["ELEMENTARY", "MIDDLE", "HIGH"]).optional().nullable(),
+  yearId: z.string().optional().nullable(),
 });
 
 export type CreateBookInput = z.infer<typeof createBookSchema>;

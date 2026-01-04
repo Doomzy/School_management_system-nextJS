@@ -31,6 +31,7 @@ model Year {
 
     level   SchoolLevel @default(ELEMENTARY)
     classes Class[]
+    books   Book[]
 
     @@unique([level, yearNumber])
     @@map("years")
@@ -82,6 +83,7 @@ model Student {
 // Book model (inventory)
 model Book {
     id                 String   @id @default(cuid())
+    yearId             String
     title              String
     author             String?
     isbn               String?  @unique
@@ -98,10 +100,10 @@ model Book {
     createdAt          DateTime @default(now())
     updatedAt          DateTime @updatedAt
 
-    level             SchoolLevel?
+    year              Year               @relation(fields: [yearId], references: [id])
     bookDistributions BookDistribution[]
 
-    @@index([level])
+    @@index([yearId])
     @@index([isbn])
     @@map("books")
 }
@@ -120,6 +122,7 @@ model BookDistribution {
     student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
     book    Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
+    @@unique([studentId, bookId]) // One book per student
     @@index([studentId])
     @@index([bookId])
     @@index([status])

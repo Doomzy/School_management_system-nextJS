@@ -3,6 +3,9 @@ import db from "@/lib/db";
 export async function getBooksData() {
   try {
     const books = await db.book.findMany({
+      include: {
+        year: true,
+      },
       orderBy: {
         createdAt: "desc",
       },
