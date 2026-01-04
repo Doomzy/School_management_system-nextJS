@@ -24,8 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createBookSchema } from "@/lib/schemas/book";
-import type { Book } from "@prisma/client";
-import { schoolLevelsArray } from "@/lib/constants";
+import type { Book, Year } from "@prisma/client";
 import {
   handleDeleteImage,
   handleImageUpload,
@@ -37,9 +36,10 @@ type BookFormData = z.infer<typeof createBookSchema>;
 
 interface BookFormProps {
   initialData: Book | null;
+  years: Year[];
 }
 
-export function BookForm({ initialData }: BookFormProps) {
+export function BookForm({ initialData, years }: BookFormProps) {
   const [uploading, setUploading] = useState(false);
   const [currentImage, setCurrentImage] = useState<UploadedImage | null>(
     initialData && initialData.coverImage && initialData.coverImagePublicId
@@ -72,7 +72,7 @@ export function BookForm({ initialData }: BookFormProps) {
       availableQty: initialData?.availableQty || 0,
       issuedQty: initialData?.issuedQty || 0,
       description: initialData?.description || "",
-      level: initialData?.level || undefined,
+      yearId: initialData?.yearId || undefined,
     },
   });
 
@@ -344,23 +344,23 @@ export function BookForm({ initialData }: BookFormProps) {
 
               <FormField
                 control={form.control}
-                name="level"
+                name="yearId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>School Level</FormLabel>
+                    <FormLabel>Year</FormLabel>
                     <Select
                       value={field.value || ""}
                       onValueChange={field.onChange}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a level" />
+                          <SelectValue placeholder="Select a year" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {schoolLevelsArray.map((level) => (
-                          <SelectItem key={level.value} value={level.value}>
-                            {level.label}
+                        {years.map((year) => (
+                          <SelectItem key={year.id} value={year.id}>
+                            {year.level} - Year {year.yearNumber}
                           </SelectItem>
                         ))}
                       </SelectContent>

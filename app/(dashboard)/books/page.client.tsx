@@ -4,12 +4,12 @@ import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import type { Book } from "@prisma/client";
+import type { Book, Year } from "@prisma/client";
 import { DataTable } from "@/components/data-table";
 import { booksColumns } from "./components/table/columns";
 
 interface BooksListClientProps {
-  books: Book[];
+  books: (Book & { year: Year | null })[];
 }
 
 export function BooksListClient({ books }: BooksListClientProps) {

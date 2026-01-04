@@ -30,3 +30,18 @@ export async function getBookById(bookId: string) {
     return null;
   }
 }
+
+export async function getYearsData() {
+  try {
+    const years = await db.year.findMany({
+      orderBy: {
+        level: "asc",
+      },
+    });
+
+    return years;
+  } catch (_error) {
+    console.error("Error fetching years:", _error);
+    return [];
+  }
+}
