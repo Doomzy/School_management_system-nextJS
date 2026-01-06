@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Calendar, Home, Inbox } from "lucide-react";
+import { BookText, Calendar, Home, Inbox, LibraryBig } from "lucide-react";
 
 export function AppSidebar() {
   const items = [
@@ -25,7 +25,12 @@ export function AppSidebar() {
     {
       title: "Books",
       url: "/books",
-      icon: Calendar,
+      icon: BookText,
+    },
+    {
+      title: "Books Distribution",
+      url: "/books-distribution",
+      icon: LibraryBig,
     },
   ];
 
