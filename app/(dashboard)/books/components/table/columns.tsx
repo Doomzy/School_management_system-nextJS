@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
 import Image from "next/image";
+import { Year } from "@prisma/client";
 
 export type Book = {
   id: string;
@@ -15,7 +16,7 @@ export type Book = {
   totalQuantity: number;
   availableQty: number;
   issuedQty: number;
-  level: string;
+  year: Year | null;
   coverImage: string | null;
 };
 
@@ -51,7 +52,7 @@ export const booksColumns: ColumnDef<Book>[] = [
     cell: ({ row }) => (
       <div>
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-1">
-          {row.original.level}
+          {row.original.year?.level}
         </span>
         <p className="text-sm text-gray-600 mt-1">{row.original.subject}</p>
       </div>
