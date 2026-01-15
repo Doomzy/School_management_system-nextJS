@@ -10,6 +10,7 @@ import {
   ClassWithStudentsCount,
   getClassesByLevel,
 } from "../../_actions/getClassesByLevel";
+import { calculatePercentage, cn, getProgressColor } from "@/lib/utils";
 
 interface StudentBookDistribution {
   studentId: string;
@@ -239,48 +240,55 @@ function DistributionForm() {
           <StepTitle title="Select Books to Distribute" stepNo={3} />
 
           <div className="space-y-3">
-            {selectedClass.year.books.map((book) => (
-              <label
-                key={book.id}
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  selectedBooks.includes(book.id)
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedBooks.includes(book.id)}
-                  onChange={() => handleBookToggle(book.id)}
-                  className="w-5 h-5 text-blue-600 rounded"
-                />
-                <div className="ml-4 flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {book.title}
-                      </p>
-                      <p className="text-sm text-gray-500">{book.subject}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">
-                        Available: {book.availableQty}/{book.totalQuantity}
-                      </p>
-                      <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
-                        <div
-                          className="bg-green-500 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (book.availableQty / book.totalQuantity) * 100
-                            }%`,
-                          }}
-                        ></div>
+            {selectedClass.year.books.map((book) => {
+              const progressPercentage = calculatePercentage(
+                book.availableQty,
+                book.totalQuantity
+              );
+              return (
+                <label
+                  key={book.id}
+                  className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                    selectedBooks.includes(book.id)
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedBooks.includes(book.id)}
+                    onChange={() => handleBookToggle(book.id)}
+                    className="w-5 h-5 text-blue-600 rounded"
+                  />
+                  <div className="ml-4 flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {book.title}
+                        </p>
+                        <p className="text-sm text-gray-500">{book.subject}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">
+                          Available: {book.availableQty}/{book.totalQuantity}
+                        </p>
+                        <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
+                          <div
+                            className={cn(
+                              "h-2 rounded-full",
+                              getProgressColor(progressPercentage)
+                            )}
+                            style={{
+                              width: `${progressPercentage}%`,
+                            }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </div>
         </div>
       )}
