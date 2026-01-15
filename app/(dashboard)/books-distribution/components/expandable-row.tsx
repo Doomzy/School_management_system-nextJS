@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, CircleAlert } from "lucide-react";
 
 interface ExpandableRowProps {
   title: string;
@@ -30,7 +30,7 @@ export function ExpandableRow({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
-            {isExpandable && (
+            {isExpandable ? (
               <button className="text-gray-400">
                 {isOpen ? (
                   <ChevronDown className="w-5 h-5" />
@@ -38,6 +38,8 @@ export function ExpandableRow({
                   <ChevronRight className="w-5 h-5" />
                 )}
               </button>
+            ) : (
+              <CircleAlert className="text-gray-400 w-5 h-5" />
             )}
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>

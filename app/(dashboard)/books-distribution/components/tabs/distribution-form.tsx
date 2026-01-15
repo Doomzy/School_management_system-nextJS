@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { schoolLevelsArray } from "@/lib/constants";
-import { CheckCircle, Clock, Users, XCircle } from "lucide-react";
+import { CheckCircle, Clock, Users, XCircle, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { DistributionStatus, SchoolLevel } from "@prisma/client";
@@ -86,9 +86,82 @@ function DistributionForm() {
     return distributionStatuses[key] ?? existingStatus;
   };
 
+  const getBookDistributionCount = (bookId: string): number => {
+    if (!selectedClass) return 0;
+
+    return selectedClass.students.filter((student) => {
+      const status = getDistributionStatus(
+        student.id,
+        bookId,
+        student.bookDistributions.find((b) => b.bookId === bookId)?.status ||
+          "PENDING"
+      );
+      return status === "RECEIVED";
+    }).length;
+  };
+
+  const getAlreadyDistributedCount = (bookId: string): number => {
+    if (!selectedClass) return 0;
+
+    return selectedClass.students.filter((student) =>
+      student.bookDistributions.some(
+        (b) => b.bookId === bookId && b.status === "RECEIVED"
+      )
+    ).length;
+  };
+
+  const getNewlyDistributedCount = (bookId: string): number => {
+    if (!selectedClass) return 0;
+
+    return selectedClass.students.filter((student) => {
+      const key = `${student.id}-${bookId}`;
+      return distributionStatuses[key] === "RECEIVED";
+    }).length;
+  };
+
+  const isBookLimitReached = (bookId: string): boolean => {
+    const book = selectedClass?.year.books.find((b) => b.id === bookId);
+    if (!book) return false;
+
+    const newlyDistributed = getNewlyDistributedCount(bookId);
+
+    return newlyDistributed >= book.availableQty;
+  };
+
+  // Check if a student can receive a specific book
+  const canStudentReceiveBook = (
+    studentId: string,
+    bookId: string
+  ): boolean => {
+    const currentStatus = getDistributionStatus(
+      studentId,
+      bookId,
+      selectedClass?.students
+        .find((s) => s.id === studentId)
+        ?.bookDistributions.find((b) => b.bookId === bookId)?.status ||
+        "PENDING"
+    );
+
+    // If already received, they can toggle it
+    if (currentStatus === "RECEIVED") return true;
+
+    // Check if limit is reached
+    return !isBookLimitReached(bookId);
+  };
+
   const toggleDistributionStatus = (studentId: string, bookId: string) => {
     const key = `${studentId}-${bookId}`;
     const currentStatus = distributionStatuses[key] ?? "PENDING";
+
+    // Check if we can mark as received
+    if (
+      currentStatus !== "RECEIVED" &&
+      !canStudentReceiveBook(studentId, bookId)
+    ) {
+      toast.error("Book quantity limit reached. No more copies available.");
+      return;
+    }
+
     const nextStatus: DistributionStatus =
       currentStatus === "PENDING"
         ? "RECEIVED"
@@ -106,10 +179,26 @@ function DistributionForm() {
     if (!selectedClass) return;
 
     const updates: Record<string, DistributionStatus> = {};
-    selectedClass.students.forEach((student) => {
-      selectedBooks.forEach((bookId) => {
+    const limitReachedBooks: string[] = [];
+
+    selectedBooks.forEach((bookId) => {
+      const book = selectedClass.year.books.find((b) => b.id === bookId);
+      if (!book) return;
+
+      let distributed = getNewlyDistributedCount(bookId);
+
+      selectedClass.students.forEach((student) => {
         const key = `${student.id}-${bookId}`;
-        updates[key] = "RECEIVED";
+        const alreadyHasBook = student.bookDistributions.some(
+          (b) => b.bookId === bookId && b.status === "RECEIVED"
+        );
+
+        if (alreadyHasBook) return;
+
+        if (distributed < book.availableQty) {
+          updates[key] = "RECEIVED";
+          distributed++;
+        }
       });
     });
 
@@ -117,6 +206,16 @@ function DistributionForm() {
       ...prev,
       ...updates,
     }));
+
+    if (limitReachedBooks.length > 0) {
+      toast.warning(
+        `Quantity limit reached for: ${limitReachedBooks.join(
+          ", "
+        )}. Only available copies were marked as received.`
+      );
+    } else {
+      toast.success("All students marked as received");
+    }
   };
 
   const submitDistributions = async () => {
@@ -128,6 +227,20 @@ function DistributionForm() {
     if (selectedBooks.length === 0) {
       toast.error("Please select at least one book");
       return;
+    }
+
+    // Check if any book limits are exceeded
+    for (const bookId of selectedBooks) {
+      const book = selectedClass.year.books.find((b) => b.id === bookId);
+      if (!book) continue;
+
+      const distributedCount = getBookDistributionCount(bookId);
+      if (distributedCount > book.availableQty) {
+        toast.error(
+          `Cannot submit: ${book.title} has ${distributedCount} books marked as received but only ${book.availableQty} available`
+        );
+        return;
+      }
     }
 
     try {
@@ -245,6 +358,11 @@ function DistributionForm() {
                 book.availableQty,
                 book.totalQuantity
               );
+              const alreadyDistributed = getAlreadyDistributedCount(book.id);
+              const newlyDistributed = getNewlyDistributedCount(book.id);
+
+              const remaining = book.availableQty - newlyDistributed;
+
               return (
                 <label
                   key={book.id}
@@ -272,6 +390,12 @@ function DistributionForm() {
                         <p className="text-sm text-gray-600">
                           Available: {book.availableQty}/{book.totalQuantity}
                         </p>
+                        {selectedBooks.includes(book.id) && (
+                          <p className="text-xs text-blue-600 font-medium">
+                            Already: {alreadyDistributed} | New:{" "}
+                            {newlyDistributed} | Remaining: {remaining}
+                          </p>
+                        )}
                         <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
                           <div
                             className={cn(
@@ -357,17 +481,25 @@ function DistributionForm() {
                         )?.status || "PENDING"
                       );
 
+                      const canReceive = canStudentReceiveBook(
+                        student.id,
+                        bookId
+                      );
+
                       return (
                         <div key={bookId} className="flex items-center gap-2">
                           <button
                             onClick={() =>
                               toggleDistributionStatus(student.id, bookId)
                             }
+                            disabled={!canReceive && status !== "RECEIVED"}
                             className={`flex-1 p-2 rounded-lg text-sm transition-all ${
                               status === "RECEIVED"
                                 ? "bg-green-100 text-green-800 border border-green-300"
                                 : status === "NOT_RECEIVED"
                                 ? "bg-red-100 text-red-800 border border-red-300"
+                                : !canReceive
+                                ? "bg-gray-200 text-gray-400 border border-gray-300 cursor-not-allowed"
                                 : "bg-gray-100 text-gray-600 border border-gray-300"
                             } `}
                           >
@@ -378,7 +510,10 @@ function DistributionForm() {
                               {status === "NOT_RECEIVED" && (
                                 <XCircle className="w-4 h-4" />
                               )}
-                              {status === "PENDING" && (
+                              {status === "PENDING" && !canReceive && (
+                                <AlertCircle className="w-4 h-4" />
+                              )}
+                              {status === "PENDING" && canReceive && (
                                 <Clock className="w-4 h-4" />
                               )}
                               <span className="truncate">{book.title}</span>

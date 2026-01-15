@@ -81,7 +81,7 @@ export const booksColumns: ColumnDef<Book>[] = [
     header: "Availability",
     cell: ({ row }) => {
       const percentage =
-        (row.original.availableQty / row.original.totalQuantity) * 100;
+        (row.original.availableQty / row.original.totalQuantity) * 100 || 0;
       const barColor =
         percentage >= 50
           ? "bg-green-500"
