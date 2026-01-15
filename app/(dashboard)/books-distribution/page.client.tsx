@@ -1,6 +1,7 @@
 import { Header } from "@/components/header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DistributionForm from "./components/tabs/distribution-form";
+import DistributionStatusTab from "./components/tabs/distribution-status-tab";
 
 export function BookDistributionPageClient() {
   return (
@@ -18,13 +19,17 @@ export function BookDistributionPageClient() {
             <TabsTrigger value="DistributionForm">
               Distribution Books
             </TabsTrigger>
-            <TabsTrigger value="password">Distribution Status</TabsTrigger>
+            <TabsTrigger value="DistributionStatus">
+              Distribution Status
+            </TabsTrigger>
             <TabsTrigger value="password1">Missing Books</TabsTrigger>
           </TabsList>
           <TabsContent value="DistributionForm">
             <DistributionForm />
           </TabsContent>
-          <TabsContent value="password">Change your password here.</TabsContent>
+          <TabsContent value="DistributionStatus">
+            <DistributionStatusTab />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
