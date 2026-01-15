@@ -16,7 +16,16 @@ export async function POST(req: Request) {
               studentId: b_dist.studentId,
             },
           },
-          update: { status: b_dist.status },
+          update: {
+            status: b_dist.status,
+            ...(b_dist.status === "RECEIVED" && {
+              book: {
+                update: {
+                  availableQty: { decrement: 1 },
+                },
+              },
+            }),
+          },
           create: b_dist,
         })
       )
