@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
+  BookCopy,
   BookText,
   Calendar,
   GraduationCap,
@@ -28,6 +29,11 @@ export function AppSidebar() {
       title: "Teachers",
       url: "/teachers",
       icon: GraduationCap,
+    },
+    {
+      title: "Subjects",
+      url: "/subjects",
+      icon: BookCopy,
     },
     {
       title: "Students",
