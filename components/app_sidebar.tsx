@@ -8,7 +8,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BookText, Calendar, Home, Inbox, LibraryBig } from "lucide-react";
+import {
+  BookText,
+  Calendar,
+  GraduationCap,
+  Home,
+  Inbox,
+  LibraryBig,
+} from "lucide-react";
 
 export function AppSidebar() {
   const items = [
@@ -16,6 +23,11 @@ export function AppSidebar() {
       title: "Levels",
       url: "/levels",
       icon: Home,
+    },
+    {
+      title: "Teachers",
+      url: "/teachers",
+      icon: GraduationCap,
     },
     {
       title: "Students",
