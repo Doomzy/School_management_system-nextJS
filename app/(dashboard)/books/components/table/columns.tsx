@@ -3,14 +3,14 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { CellAction } from "./cell-action";
 import Image from "next/image";
-import { Year } from "@prisma/client";
+import { Subject, Year } from "@prisma/client";
 
 export type Book = {
   id: string;
   title: string;
   author: string | null;
   isbn: string | null;
-  subject: string | null;
+  subject: Subject | null;
   publisher: string | null;
   edition: string | null;
   totalQuantity: number;
@@ -54,7 +54,12 @@ export const booksColumns: ColumnDef<Book>[] = [
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-1">
           {row.original.year?.level}
         </span>
-        <p className="text-sm text-gray-600 mt-1">{row.original.subject}</p>
+        <p className="text-xs text-gray-400 ms-1">
+          {row.original.subject?.code}
+        </p>
+        <p className="text-sm text-gray-600 mt-1">
+          {row.original.subject?.name}
+        </p>
       </div>
     ),
   },
@@ -86,8 +91,8 @@ export const booksColumns: ColumnDef<Book>[] = [
         percentage >= 50
           ? "bg-green-500"
           : percentage >= 20
-          ? "bg-yellow-500"
-          : "bg-red-500";
+            ? "bg-yellow-500"
+            : "bg-red-500";
       return (
         <>
           <div>{percentage}%</div>
