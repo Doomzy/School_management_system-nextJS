@@ -21,6 +21,17 @@ enum DistributionStatus {
     NOT_RECEIVED
 }
 
+// Enum for days of the week
+enum DayOfWeek {
+    SUNDAY
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+}
+
 // Year/Grade model (e.g., Grade 1, first, Year 7, etc.)
 model Year {
     id         String   @id @default(cuid())
@@ -49,11 +60,68 @@ model Class {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
-    year     Year      @relation(fields: [yearId], references: [id], onDelete: Cascade)
-    students Student[]
+    year      Year       @relation(fields: [yearId], references: [id], onDelete: Cascade)
+    students  Student[]
+    schedules Schedule[]
 
     @@unique([yearId, section])
     @@map("classes")
+}
+
+model Subject {
+    id          String   @id @default(cuid())
+    name        String   @unique
+    code        String?  @unique
+    description String?
+    color       String?  @default("#3b82f6")
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    schedules Schedule[]
+    teachers  Teacher[]
+    books     Book[]
+
+    @@map("subjects")
+}
+
+model Teacher {
+    id        String   @id @default(cuid())
+    firstName String
+    lastName  String
+    email     String   @unique
+    phone     String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    subjectId String?
+    subject   Subject? @relation(fields: [subjectId], references: [id])
+
+    schedules Schedule[]
+
+    @@map("teachers")
+}
+
+model Schedule {
+    id         String    @id @default(cuid())
+    dayOfWeek  DayOfWeek
+    startTime  String // Format: "HH:MM" e.g., "08:00"
+    endTime    String // Format: "HH:MM" e.g., "09:00"
+    roomNumber String?
+    notes      String?
+    createdAt  DateTime  @default(now())
+    updatedAt  DateTime  @updatedAt
+
+    classId   String
+    class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+    subjectId String
+    subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+    teacherId String
+    teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+    @@unique([classId, dayOfWeek, startTime])
+    @@index([classId])
+    @@index([dayOfWeek])
+    @@map("schedules")
 }
 
 // Student model
@@ -87,7 +155,6 @@ model Book {
     title              String
     author             String?
     isbn               String?  @unique
-    subject            String?
     publisher          String?
     publishedYear      Int?
     edition            String?
@@ -100,6 +167,8 @@ model Book {
     createdAt          DateTime @default(now())
     updatedAt          DateTime @updatedAt
 
+    subjectId         String?
+    subject           Subject?           @relation(fields: [subjectId], references: [id])
     year              Year               @relation(fields: [yearId], references: [id])
     bookDistributions BookDistribution[]
 
