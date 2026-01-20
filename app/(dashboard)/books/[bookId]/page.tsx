@@ -1,3 +1,4 @@
+import { getSubjectsData } from "../../subjects/_actions/getSubjectsData";
 import { getBookById, getYearsData } from "../_actions/getAllBooks";
 import { BookPageClient } from "./page.client";
 
@@ -17,6 +18,13 @@ export default async function Page(props: {
   }
 
   const years = await getYearsData();
+  const subjects = await getSubjectsData();
 
-  return <BookPageClient initialData={initialData} years={years} />;
+  return (
+    <BookPageClient
+      initialData={initialData}
+      years={years}
+      subjects={subjects}
+    />
+  );
 }

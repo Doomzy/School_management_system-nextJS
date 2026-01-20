@@ -5,6 +5,7 @@ export async function getBooksData() {
     const books = await db.book.findMany({
       include: {
         year: true,
+        subject: true,
       },
       orderBy: {
         createdAt: "desc",

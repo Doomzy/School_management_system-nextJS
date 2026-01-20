@@ -24,7 +24,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createBookSchema } from "@/lib/schemas/book";
-import type { Book, Year } from "@prisma/client";
+import type { Book, Subject, Year } from "@prisma/client";
 import {
   handleDeleteImage,
   handleImageUpload,
@@ -37,9 +37,10 @@ type BookFormData = z.infer<typeof createBookSchema>;
 interface BookFormProps {
   initialData: Book | null;
   years: Year[];
+  subjects: Subject[];
 }
 
-export function BookForm({ initialData, years }: BookFormProps) {
+export function BookForm({ initialData, years, subjects }: BookFormProps) {
   const [uploading, setUploading] = useState(false);
   const [currentImage, setCurrentImage] = useState<UploadedImage | null>(
     initialData && initialData.coverImage && initialData.coverImagePublicId
@@ -47,7 +48,7 @@ export function BookForm({ initialData, years }: BookFormProps) {
           url: initialData.coverImage,
           publicId: initialData.coverImagePublicId,
         }
-      : null
+      : null,
   );
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -64,7 +65,7 @@ export function BookForm({ initialData, years }: BookFormProps) {
       title: initialData?.title || "",
       author: initialData?.author || "",
       isbn: initialData?.isbn || "",
-      subject: initialData?.subject || "",
+      subjectId: initialData?.subjectId || "",
       publisher: initialData?.publisher || "",
       publishedYear: initialData?.publishedYear || undefined,
       edition: initialData?.edition || "",
@@ -203,18 +204,27 @@ export function BookForm({ initialData, years }: BookFormProps) {
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="subject"
+                  name="subjectId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Subject</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Subject"
-                          disabled={isLoading}
-                          {...field}
-                          value={field.value || ""}
-                        />
-                      </FormControl>
+                      <Select
+                        value={field.value || ""}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl className="w-full">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a subject" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subjects.map((subject) => (
+                            <SelectItem key={subject.id} value={subject.id}>
+                              {subject.name + " (" + subject.code + ")"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -235,7 +245,7 @@ export function BookForm({ initialData, years }: BookFormProps) {
                           value={field.value || ""}
                           onChange={(e) =>
                             field.onChange(
-                              e.target.value ? parseInt(e.target.value) : null
+                              e.target.value ? parseInt(e.target.value) : null,
                             )
                           }
                         />
@@ -410,7 +420,7 @@ export function BookForm({ initialData, years }: BookFormProps) {
                               currentImage,
                               setCurrentImage,
                               setUploading,
-                              initialData?.id
+                              initialData?.id,
                             )
                           }
                           value={field.value || ""}
